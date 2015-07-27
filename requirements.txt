@@ -1,1 +1,4 @@
 flask==0.10.1
+requests==2.7.0
+python-swiftclient==2.5.0
+python-keystoneclient==1.6.0
