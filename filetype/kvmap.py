@@ -11,15 +11,26 @@ class kvmap(filetype):
     K-V map file, storing string-to-string map based on the diction sort of keys,
     kernel file type to store folder index.
     File structure:
-    - BYTE0~3: magic chars "KVMP"
-    =========Rep=========
-    - 4B-int: n, 4B-int:m
-    - n B: unicoded key
-    - m B: unicoded value
-    =====================
-    - 0
+        - BYTE0~3: magic chars "KVMP"
+        =========Rep=========
+        - 4B-int: n, 4B-int:m
+        - n B: unicoded key
+        - m B: unicoded value
+        =====================
+        - 0
     Store structure per entry:
-    (key,(value,timestamp))
+        (key,(value,timestamp))
+    How to edit:
+        1. Construct with a string(create)/tuple(modify) as 2nd parameter
+        2. checkOut
+        3. edit kvm
+        4. checkIn
+        5. writeBack
+    How to merge:
+        1. Construct with a tuple as 2nd parameter
+        2. mergeWith
+        3. [IF needs modification, checkIn/Out]
+        4. writeBack
     """
 
     fileMagic="KVMP"
