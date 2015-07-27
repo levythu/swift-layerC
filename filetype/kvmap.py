@@ -18,61 +18,133 @@ class kvmap(filetype):
     - m B: unicoded value
     =====================
     - 0
+    Store structure per entry:
+    (key,(value,timestamp))
     """
 
     fileMagic="KVMP"
     glbEncode="utf-8"
 
-    def openFile(self,file0):
-        self.laFile=file0[0]
-        f = open(self.laFile, 'r')
-        if f.read(4)!=kvmap.fileMagic:
-            raise ex.exception_file.WrongFileFormat("Wrong file @ kvmap file")
-        self.kvm={}
+    def __init__(self,file0):
+        if type(file0)==tuple:
+            filetype.__init__(self,file0)
+            self.finishRead=False
+        else:
+            filetype.__init__(self,(file0,utils.timestamp.getTimestamp()))
+            self.finishRead=True
+        self.haveRead=0
+        self.readData=[]
+        self.kvm=None
+
+    def mergeWith(self,file2):
+        tmpList=[]
+        i=0
+        j=0
         while True:
-            n=struct.unpack("<L", f.read(4))[0]
-            if n==0:
+            if self.lazyRead(i)==None:
+                while file2.lazyRead(j)!=None:
+                    tmpList.append(file2.lazyRead(j))
+                    j+=1
                 break
-            m=struct.unpack("<L", f.read(4))[0]
-            ts=struct.unpack("<L", f.read(4))[0]
-            key=f.read(n).decode(kvmap.glbEncode)
-            val=(f.read(m).decode(kvmap.glbEncode),ts)
-            self.kvm[key]=val
-        f.close()
-        filetype.openFile(self,file0)
+            if file2.lazyRead(j)==None:
+                while self.lazyRead(i)!=None:
+                    tmpList.append(self.lazyRead(i))
+                    i+=1
+                break
+            while self.lazyRead(i)!=None and file2.lazyRead(j)!=None and self.lazyRead(i)[0]<file2.lazyRead(j)[0]:
+                tmpList.append(self.lazyRead(i))
+                i+=1
+            while self.lazyRead(i)!=None and file2.lazyRead(j)!=None and self.lazyRead(i)[0]>file2.lazyRead(j)[0]:
+                tmpList.append(file2.lazyRead(j))
+                j+=1
+            while self.lazyRead(i)!=None and file2.lazyRead(j)!=None and self.lazyRead(i)[0]==file2.lazyRead(j)[0]:
+                # Attentez: merge stratege may be changed in the future
+                if self.lazyRead(i)[1][1]==file2.lazyRead(j)[1][1]:
+                    if self.lazyRead(i)[1][0]!=file2.lazyRead(j)[1][0]:
+                        raise ex.exception_file.MergeConflictException("Conflict @ kvmap.")
+                    else:
+                        tTuple=self.lazyRead(i)
+                else:
+                    tTuple=self.lazyRead(i) if self.lazyRead(i)[1][1]>file2.lazyRead(j)[1][1] else file2.lazyRead(j)
+                tmpList.append(tTuple)
+                i+=1
+                j+=1
+        self.readData=tmpList
+        self.haveRead=len(self.readData)
 
-    def closeFile(self):
-        if not self.fileOpened:
-            raise ex.exception_file.InvalidFileOperation("Unopened file")
+    def lazyRead(self,pos=-1):
+        if pos==-1:
+            pos=self.haveRead
+        if pos<self.haveRead:
+            return self.readData[pos]
+        if self.finishRead:
+            return None
+        if self.haveRead==0:    #Open the target now
+            self.f = open(self.file0[0],'r')
+            if self.f.read(4)!=kvmap.fileMagic:
+                self.f.close()
+                raise ex.exception_file.WrongFileFormat("Wrong file @ kvmap file")
+        while pos>=self.haveRead:
+            n=struct.unpack("<L", self.f.read(4))[0]
+            if n==0:                #Nothing more could be read. The same as finishRead.
+                self.f.close()
+                self.finishRead=True
+                return None
+            m=struct.unpack("<L", self.f.read(4))[0]
+            ts=struct.unpack("<L", self.f.read(4))[0]
+            key=self.f.read(n).decode(kvmap.glbEncode)
+            val=(self.f.read(m).decode(kvmap.glbEncode),ts)
+            self.readData.append((key,val));
+            self.haveRead+=1
+        return self.readData[pos]
 
-        f = open(self.laFile, 'w')
+    def writeBack(self,filename=None):
+        if not self.finishRead:
+            return
+        if filename==None:
+            filename=self.file0[0]
+        f = open(filename, 'w')
         f.write(kvmap.fileMagic)
-        for key in self.kvm:
-            keybuf=key.encode(kvmap.glbEncode)
-            valbuf=self.kvm[key][0].encode(kvmap.glbEncode)
+        for i in xrange(0,self.haveRead):
+            keybuf=self.readData[i][0].encode(kvmap.glbEncode)
+            valbuf=self.readData[i][1][0].encode(kvmap.glbEncode)
             if len(keybuf)==0:
                 continue
             f.write(struct.pack("<L", len(keybuf)))
             f.write(struct.pack("<L", len(valbuf)))
-            f.write(struct.pack("<L", self.kvm[key][1]))
+            f.write(struct.pack("<L", self.readData[i][1][1]))
             f.write(keybuf)
             f.write(valbuf)
         f.write(struct.pack("<L", 0))
         f.close()
 
-        filetype.closeFile(self)
-
-    def createFile(self,filePath):
-        # Attentez: never invoke both createFile and openFile to one certain class
-        self.laFile=filePath
+    def checkOut(self):
+        '''
+        Checkout the content of file to a map for edit.
+        Attentez: all the modification will not be persistent unless exec checkIn()
+        '''
+        while not self.finishRead:
+            self.lazyRead()
         self.kvm={}
-        filetype.openFile(self,(filePath,utils.timestamp.getTimestamp()))
+        for i in xrange(0,self.haveRead):
+            self.kvm[self.readData[i][0]]=self.readData[i][1]
+
+    def checkIn(self):
+        if self.kvm==None:
+            print "!! Logical Error at kvmap::checkIn."
+            return
+        tmpList=[]
+        it = iter(sorted(self.kvm.iteritems()))
+        while True:
+            t=next(it, None)
+            if t==None:
+                break
+            tmpList.append(t)
+        self.readData=tmpList
+        self.haveRead=len(self.readData)
 
 if __name__ == '__main__':
-    t=kvmap()
-    t.openFile(("huahua.expdata",2))
-    #t.createFile("huahua.expdata")
-    #t.kvm[u"huahua"]=(u"baomihua",1)
-    #t.kvm[u"同一个文件倒也"]=(u"后性，然后合并",1994)
-    print json.dumps(t.kvm)
-    t.closeFile()
+    t=kvmap(("1.expdata",2))
+    p=kvmap(("2.expdata",2))
+    t.mergeWith(p)
+    t.writeBack("h.expdata")
