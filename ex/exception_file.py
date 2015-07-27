@@ -1,3 +1,5 @@
+# coding=utf-8
+
 class MergeConflictException(Exception):
     '''Thrown when conflict is encountered.'''
     def __init__(self, msg):

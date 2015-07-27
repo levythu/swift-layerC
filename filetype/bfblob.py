@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from ftype import filetype
 import utils.timestamp
 import ex.exception_file

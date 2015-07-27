@@ -1,3 +1,5 @@
+# coding=utf-8
+
 def getTimestamp(baseTime=0):
     return baseTime+1
 

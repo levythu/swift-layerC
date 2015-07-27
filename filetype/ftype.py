@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import ex.exception_file
 
 class filetype:
