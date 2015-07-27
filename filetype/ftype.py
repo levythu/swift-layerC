@@ -6,17 +6,16 @@ class filetype:
     def __init__(self):
         self.fileOpened=False
 
-    def openFile(self,filePath,modifiedTimestamp):
+    def openFile(self,file0):
         self.fileOpened=True
-        self.modifiedTimestamp=modifiedTimestamp
+        self.modifiedTimestamp=file0[1]
 
-    def mergeWith(self,file2):
-        if self.__class__.__name__!=file2.__class__.__name__:
-            raise ex.exception_file.InvalidFileOperation("Different filetype cannot be merged.")
-        if not self.fileOpened:
-            raise ex.exception_file.InvalidFileOperation("Unopened file")
-        if not file2.fileOpened:
-            raise ex.exception_file.InvalidFileOperation("Unopened file")
+    @staticmethod
+    def mergeWith(file1,file2):
+        '''
+        File: (filename, generalTimestamp)
+        '''
+        pass
 
     def closeFile(self):
         self.fileOpened=False

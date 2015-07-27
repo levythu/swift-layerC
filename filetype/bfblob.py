@@ -6,22 +6,18 @@ class bfblob(filetype):
     """most brute-force file type, no comparison before merge, just compare the timestamp of the file as a whole and
        the new one replaces the obsolete one."""
 
-    def openFile(self,filePath,modifiedTimestamp):
-        self.laFile=filePath
-        filetype.openFile(self,filePath,modifiedTimestamp)
+    def openFile(self,file0):
+        self.laFile=file0[0]
+        filetype.openFile(self,file0)
 
-    def mergeWith(self,file2):
-        filetype.mergeWith(self,file2)
-        if self.modifiedTimestamp<file2.modifiedTimestamp:
-            self.laFile=file2.laFile
-        elif self.modifiedTimestamp==file2.modifiedTimestamp:
+    @staticmethod
+    def mergeWith(file1,file2):
+        filetype.mergeWith(file1,file2)
+        if file1[1]<file2[1]:
+            return file2
+        elif file1[1]==file2[1]:
             raise ex.exception_file.MergeConflictException("Confilict at bfblob.")
-        self.modifiedTimestamp=utils.timestamp.mergeTimestamp(self.modifiedTimestamp,file2.modifiedTimestamp)
+        return file1
 
 if __name__ == '__main__':
-    qq=bfblob()
-    qq.openFile("1234",2)
-    pp=bfblob()
-    pp.openFile("xxxx",2)
-    qq.mergeWith(pp)
-    print qq.laFile
+    print bfblob.mergeWith(("23e",1),("555",99))
