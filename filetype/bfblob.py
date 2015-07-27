@@ -6,7 +6,6 @@ class bfblob(filetype):
     """most brute-force file type, no comparison before merge, just compare the timestamp of the file as a whole and
        the new one replaces the obsolete one."""
 
-    #def __init__(self):
     def openFile(self,filePath,modifiedTimestamp):
         self.laFile=filePath
         filetype.openFile(self,filePath,modifiedTimestamp)

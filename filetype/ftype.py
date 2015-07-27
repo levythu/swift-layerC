@@ -1,3 +1,5 @@
+import ex.exception_file
+
 class filetype:
     """general type for all the specified ones, regulating interfaces."""
 
@@ -10,11 +12,11 @@ class filetype:
 
     def mergeWith(self,file2):
         if self.__class__.__name__!=file2.__class__.__name__:
-            raise Exception()
+            raise ex.exception_file.InvalidFileOperation("Different filetype cannot be merged.")
         if not self.fileOpened:
-            raise Exception()
+            raise ex.exception_file.InvalidFileOperation("Unopened file")
         if not file2.fileOpened:
-            raise Exception()
+            raise ex.exception_file.InvalidFileOperation("Unopened file")
 
     def closeFile(self):
         self.fileOpened=False
