@@ -14,6 +14,19 @@ def synchronized(lock):
         return newFunction
     return wrap
 
+def sync(f):
+    """ Synchronization decorator. Class version"""
+    def newFunction(self, *args, **kw):
+        self._lock.acquire()
+        try:
+            return f(self, *args, **kw)
+        finally:
+            self._lock.release()
+    return newFunction
+class syncClassBase:
+    def __init__(self):
+        self._lock=Lock()
+
 if __name__ == '__main__':
     L=Lock()
     @synchronized(L)
