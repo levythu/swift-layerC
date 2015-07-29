@@ -17,11 +17,14 @@ class bfblob(filetype):
         if self.file0[1]<file2.file0[1]:
             self.modified=True
             self.file0=file2.file0
+            self.type=file2.type
             return
         if self.file0[1]==file2.file0[1]:
             raise ex.exception_file.MergeConflictException("Conflict @ bfblob.")
 
     def writeBack(self):
+        if self.type=="stream":
+            return self.file0[0]
         if not self.modified:
             return
         # Attentez: can choose to delete old file there

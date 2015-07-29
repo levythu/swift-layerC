@@ -5,6 +5,7 @@ import struct
 from ftype import filetype
 import utils.timestamp
 import ex.exception_file
+import cStringIO
 
 class kvmap(filetype):
     """
@@ -91,7 +92,10 @@ class kvmap(filetype):
         if self.finishRead:
             return None
         if self.haveRead==0:    #Open the target now
-            self.f = open(self.file0[0],'r')
+            if self.type=="file":
+                self.f = open(self.file0[0],'r')
+            else:
+                self.f=self.file0[0]
             if self.f.read(4)!=kvmap.fileMagic:
                 self.f.close()
                 raise ex.exception_file.WrongFileFormat("Wrong file @ kvmap file")
@@ -112,9 +116,12 @@ class kvmap(filetype):
     def writeBack(self,filename=None):
         if not self.finishRead:
             return
-        if filename==None:
-            filename=self.file0[0]
-        f = open(filename, 'w')
+        if self.type=="file":
+            if filename==None:
+                filename=self.file0[0]
+            f = open(filename, 'w')
+        else:
+            f=cStringIO.StringIO()
         f.write(kvmap.fileMagic)
         for i in xrange(0,self.haveRead):
             keybuf=self.readData[i][0].encode(kvmap.glbEncode)
@@ -127,7 +134,10 @@ class kvmap(filetype):
             f.write(keybuf)
             f.write(valbuf)
         f.write(struct.pack("<L", 0))
-        f.close()
+        if self.type=="file":
+            f.close()
+        else:
+            return f
 
     def checkOut(self):
         '''
@@ -155,7 +165,12 @@ class kvmap(filetype):
         self.haveRead=len(self.readData)
 
 if __name__ == '__main__':
-    t=kvmap(("1.expdata",2))
-    p=kvmap(("2.expdata",2))
-    t.mergeWith(p)
-    t.writeBack("h.expdata")
+    t=kvmap(("h.expdata",2))
+    t.lazyRead(1994717)
+    t.type="stream"
+    q=t.writeBack()
+    news=cStringIO.StringIO(q.getvalue())
+    t=kvmap((news,2))
+    t.lazyRead(1994717)
+    print t.writeBack().getvalue()
+    q.close()

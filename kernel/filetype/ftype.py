@@ -7,6 +7,10 @@ class filetype:
 
     def __init__(self,file0):
         self.file0=file0
+        if isinstance(file0[0],str):
+            self.type="file"
+        else:
+            self.type="stream"
 
     def mergeWith(self,file2):
         if type(self).__name__!=type(file2).__name__:

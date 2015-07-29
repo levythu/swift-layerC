@@ -8,6 +8,8 @@ class fd
     Responsible for scheduling intra- and inter- node merging work.
     - filename: the filename in SWIFT OBJECT
     - io: storage io interface
+
+    Attentez: when Construct with a stream, its get all the data from the stream and writeBack returns
     '''
     # This dictionary ensure atomicity
     global_file_map=syncdict()
@@ -20,7 +22,7 @@ class fd
         self.filename=filename
         self.io=io
 
-    def
+    
 
 if __name__ == '__main__':
     pass
