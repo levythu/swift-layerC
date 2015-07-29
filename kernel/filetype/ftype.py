@@ -19,5 +19,8 @@ class filetype:
     def writeBack(self):
         pass
 
+    def getTimestamp(self):
+        return self.file0[1]
+
 if __name__ == '__main__':
     pass

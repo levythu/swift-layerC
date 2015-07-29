@@ -4,7 +4,7 @@ from utils.decorator.synchronizer import syncClassBase,sync,sync_
 from utils.functionhelper import *
 import config.nodeinfo
 
-class fd(syncClassBase)
+class fd(syncClassBase):
     '''
     Kernel descriptor of one file(patch excluded), the filename should be unique both in swift and in
     memory, thus providing exclusive control on it.
@@ -20,6 +20,7 @@ class fd(syncClassBase)
     # the keyname in metadata representing the number of latest patch which is an integer, if
     # no patch exists, there should not be such a key.
     METAKEY_LATEST_PATCH=u"latest_patch_num"    # DEPRECATED.
+    METAKEY_TIMESTAMP=u"timestamp"
 
     '''Here are the contants in intra-patch's metadata'''
     INTRA_PATCH_METAKEY_NEXT_PATCH=u"next_patch"
@@ -45,14 +46,23 @@ class fd(syncClassBase)
 
     @sync_(0)
     def commitPatch(self,patchfile):
-        pass
+        getLatestPatch()
+        meta={}
+        meta[fd.METAKEY_TIMESTAMP]=unicode(str(patchfile.getTimestamp()))
+        meta[fd.INTRA_PATCH_METAKEY_NEXT_PATCH]=unicode(str(self.latestPatch+2))
+        t=patchfile.writeBack()
+        io.put(self.getPatchName(self.latestPatch+1),t.getvalue(),meta)
+        self.latestPatch+=1
 
     @sync_(1)
     def getLatestPatch():
         if self.latestPatch==None:
             prg=0
-            while (prgto=getinfo(self.getPatchName(prg)))!=None:
-                prg=prgto[INTRA_PATCH_METAKEY_NEXT_PATCH]
+            prgto=io.getinfo(self.getPatchName(prg))
+            while prgto!=None:
+                prg=prgto[fd.INTRA_PATCH_METAKEY_NEXT_PATCH]
+                prgto=io.getinfo(self.getPatchName(prg))
+            self.latestPatch=prg-1
         return self.latestPatch
 
     @sync_(2)
@@ -60,8 +70,6 @@ class fd(syncClassBase)
         if self.metadata==None:
             self.metadata=io.getinfo(self.filename)
         return self.metadata
-
-
 
 if __name__ == '__main__':
     pass
