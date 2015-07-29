@@ -23,9 +23,24 @@ def sync(f):
         finally:
             self._lock.release()
     return newFunction
+def sync_(lockid):
+    def wrapper(f):
+        def newFunction(self, *args, **kw):
+            self._la[lockid].acquire()
+            try:
+                return f(self, *args, **kw)
+            finally:
+                self._la[lockid].release()
+        return newFunction
+    return wrapper
 class syncClassBase:
-    def __init__(self):
+    def __init__(self,lockArray=None):
         self._lock=Lock()
+        if lockArray!=None:
+            self._la=[]
+            for i in xrange(0,lockArray):
+                self._la[i]=Lock()
+
 
 if __name__ == '__main__':
     L=Lock()
