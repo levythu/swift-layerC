@@ -14,6 +14,7 @@ tenant=None, username=None, passwd=None):
         auth_version=config.proxyinfo.auth_server_version, tenant_name=tenant)
 
 class io_swift(iobase):
+    # WARN: never forget to handle authentication error.
     metadata_prefix=u"X-Object-Meta-"
 
     def __init__(self,*args, **kw):
@@ -29,7 +30,12 @@ class io_swift(iobase):
 
     def get(self,filename):
         '''if exist, return data buffer. Otherwise return None'''
-        h,c=self.swiftClient.get_object(container=self.container,obj=filename)
+        try:
+            h,c=self.swiftClient.get_object(container=self.container,obj=filename)
+        except swiftclient.exceptions.ClientException as e:
+            if e.http_status==404:
+                return None
+            raise e
         nh={}
         for key in h:
             if key.startswith(io_swift.metadata_prefix):
@@ -44,7 +50,12 @@ class io_swift(iobase):
 
     def getinfo(self,filename):
         '''if exist, return data buffer. Otherwise return None'''
-        h=self.swiftClient.head_object(container=self.container,obj=filename)
+        try:
+            h=self.swiftClient.head_object(container=self.container,obj=filename)
+        except swiftclient.exceptions.ClientException as e:
+            if e.http_status==404:
+                return None
+            raise e
         nh={}
         for key in h:
             if key.startswith(io_swift.metadata_prefix):
