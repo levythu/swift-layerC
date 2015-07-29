@@ -3,6 +3,8 @@ from utils.datastructure.syncdict import syncdict
 from utils.decorator.synchronizer import syncClassBase,sync,sync_
 from utils.functionhelper import *
 import config.nodeinfo
+from kernel.filetype.kvmap import kvmap
+from demonoupload import *
 
 class fd(syncClassBase):
     '''
@@ -19,20 +21,21 @@ class fd(syncClassBase):
     '''Here are the constants in mainfile's metadata'''
     # the keyname in metadata representing the number of latest patch which is an integer, if
     # no patch exists, there should not be such a key.
-    METAKEY_LATEST_PATCH=u"latest_patch_num"    # DEPRECATED.
+    # METADATA must not contain "_" and only lowercase is permitted
+    METAKEY_LATEST_PATCH=u"latest-patch-num"    # DEPRECATED.
     METAKEY_TIMESTAMP=u"timestamp"
 
     '''Here are the contants in intra-patch's metadata'''
-    INTRA_PATCH_METAKEY_NEXT_PATCH=u"next_patch"
+    INTRA_PATCH_METAKEY_NEXT_PATCH=u"next-patch"
 
     # = Constants END = Constants END = Constants END = Constants END = Constants END =
 
     # This dictionary ensure atomicity
     global_file_map=syncdict()
 
-    @classmethod
+    @staticmethod
     def getInstance(filename,io):
-        return global_file_map.declare(filename,fd(filename,io))
+        return fd.global_file_map.declare(filename,fd(filename,io))
 
     def getPatchName(self,patchnumber):
         return unicode(self.filename+".proxy"+str(config.nodeinfo.node_number)+".patch"+str(patchnumber))
@@ -46,30 +49,38 @@ class fd(syncClassBase):
 
     @sync_(0)
     def commitPatch(self,patchfile):
-        getLatestPatch()
+        self.getLatestPatch()
         meta={}
         meta[fd.METAKEY_TIMESTAMP]=unicode(str(patchfile.getTimestamp()))
         meta[fd.INTRA_PATCH_METAKEY_NEXT_PATCH]=unicode(str(self.latestPatch+2))
         t=patchfile.writeBack()
-        io.put(self.getPatchName(self.latestPatch+1),t.getvalue(),meta)
+        self.io.put(self.getPatchName(self.latestPatch+1),t.getvalue(),meta)
+        t.close()
         self.latestPatch+=1
 
     @sync_(1)
-    def getLatestPatch():
+    def getLatestPatch(self):
         if self.latestPatch==None:
             prg=0
-            prgto=io.getinfo(self.getPatchName(prg))
+            prgto=self.io.getinfo(self.getPatchName(prg))
             while prgto!=None:
-                prg=prgto[fd.INTRA_PATCH_METAKEY_NEXT_PATCH]
-                prgto=io.getinfo(self.getPatchName(prg))
+                prg=int(prgto[fd.INTRA_PATCH_METAKEY_NEXT_PATCH])
+                prgto=self.io.getinfo(self.getPatchName(prg))
             self.latestPatch=prg-1
         return self.latestPatch
 
     @sync_(2)
     def syncMetadata(self):
         if self.metadata==None:
-            self.metadata=io.getinfo(self.filename)
+            self.metadata=self.io.getinfo(self.filename)
         return self.metadata
 
 if __name__ == '__main__':
-    pass
+    t=kvmap(None)
+    t.checkOut()
+    t.kvm[u"huha"]=(u"baomihua",2)
+    t.checkIn()
+
+    q=fd.getInstance(u"test1",demoio)
+    q.commitPatch(t)
+    print q.latestPatch

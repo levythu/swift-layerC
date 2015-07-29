@@ -2,3 +2,4 @@
 *.debuglog
 *.expdata
 *.noupload.*
+*noupload.*

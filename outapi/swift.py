@@ -15,7 +15,7 @@ tenant=None, username=None, passwd=None):
 
 class io_swift(iobase):
     # WARN: never forget to handle authentication error.
-    metadata_prefix=u"X-Object-Meta-"
+    metadata_prefix=u"x-object-meta-"
 
     def __init__(self,*args, **kw):
         self.swiftClient=makeConnection(*args, **kw)

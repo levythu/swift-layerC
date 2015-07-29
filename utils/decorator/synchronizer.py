@@ -14,6 +14,7 @@ def synchronized(lock):
         return newFunction
     return wrap
 
+
 def sync(f):
     """ Synchronization decorator. Class version"""
     def newFunction(self, *args, **kw):
@@ -39,7 +40,7 @@ class syncClassBase:
         if lockArray!=None:
             self._la=[]
             for i in xrange(0,lockArray):
-                self._la[i]=Lock()
+                self._la.append(Lock())
 
 
 if __name__ == '__main__':
