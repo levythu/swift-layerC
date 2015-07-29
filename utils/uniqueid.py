@@ -26,4 +26,4 @@ launchTime=time.time()
 globalCount=syncCounter()
 
 def genGlobalUniqueName():
-    return str(config.nodeinfo.node_number)+"~"+str(launchTime)+"~"+str(globalCount.inc())
+    return unicode(str(config.nodeinfo.node_number)+"~"+str(launchTime)+"~"+str(globalCount.inc()))

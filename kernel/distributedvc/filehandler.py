@@ -6,9 +6,21 @@ class fd
     Kernel descriptor of one file, the filename should be unique both in swift and in
     memory, thus providing exclusive control on it.
     Responsible for scheduling intra- and inter- node merging work.
+    - filename: the filename in SWIFT OBJECT
+    - io: storage io interface
     '''
-    # This dictionary ensure
+    # This dictionary ensure atomicity
     global_file_map=syncdict()
 
-    def __init__():
-        
+    @classmethod
+    getInstance(filename,io):
+        return global_file_map.declare(filename,fd(filename,io))
+
+    def __init__(self,filename,io):
+        self.filename=filename
+        self.io=io
+
+    def
+
+if __name__ == '__main__':
+    pass
