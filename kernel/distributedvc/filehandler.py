@@ -5,7 +5,7 @@ from utils.functionhelper import *
 import config.nodeinfo
 from kernel.filetype.kvmap import kvmap
 from demonoupload import *
-from intranodevc
+import intranodevc
 
 class fd(syncClassBase):
     '''
@@ -87,5 +87,4 @@ if __name__ == '__main__':
     t.checkIn()
 
     q=fd.getInstance(u"test1",demoio)
-    q.commitPatch(t)
-    print q.latestPatch
+    q.getLatestPatch()

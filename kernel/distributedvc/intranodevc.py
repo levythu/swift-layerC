@@ -1,6 +1,8 @@
 # coding=utf-8
 from utils.decorator.synchronizer import syncClassBase,sync,sync_
 from threading import Thread
+import traceback
+import time
 
 class mergeworker(Thread):
     '''
@@ -16,8 +18,12 @@ class mergeworker(Thread):
         self.pinpoint=pinpoint
 
     def run(self):
-        while True:
-            pass
+        try:
+            print self.supervisor.taskmap
+        except:
+            tb = traceback.format_exc()
+        finally:
+            self.supervisor.reportDeath(self,mergesupervisor.REPORT_DEATH_DIEOF_EXCEPTION)
 
 
 class mergesupervisor(syncClassBase):
@@ -29,7 +35,7 @@ class mergesupervisor(syncClassBase):
     TASKSTATUS_IDLE=0
     TASKSTATUS_WORKING=1
     class taskstruct:
-        def __init__(status,next):
+        def __init__(self,status,next):
             self.status=status
             self.next=next
 
@@ -54,13 +60,14 @@ class mergesupervisor(syncClassBase):
 
     REPORT_DEATH_DIEOF_STARVATION=0
     REPORT_DEATH_DIEOF_COMMAND=1
+    REPORT_DEATH_DIEOF_EXCEPTION=2
     @sync_(0)
     def reportDeath(self,worker,dieof):
         self.workersAlive-=1
         self.taskmap[worker.pinpoint].status=mergesupervisor.TASKSTATUS_IDLE
-        # TODO: batch workers
         if self.workersAlive==0 and len(self.taskmap)>1:
-            tt=Thread(target=mergesupervisor.batchWorker,args=(self))
+            #time.sleep(1)
+            tt=Thread(target=mergesupervisor.batchWorker,args=[self])
             tt.start()
 
     @sync_(0)
@@ -76,7 +83,7 @@ class mergesupervisor(syncClassBase):
     def announceNewTask(self,patchnum,nextpatch=None):
         if nextpatch==None:
             nextpatch=patchnum+1
-        self.taskmap[patchnum]=taskstruct(mergesupervisor.TASKSTATUS_IDLE,nextpatch)
+        self.taskmap[patchnum]=mergesupervisor.taskstruct(mergesupervisor.TASKSTATUS_IDLE,nextpatch)
 
     def batchWorker(self,nums=None,range=None):
         '''Only the two arguments can be specified one, nums indicating the whole number
@@ -87,13 +94,13 @@ class mergesupervisor(syncClassBase):
         if nums==None and range==None:
             nums=1
         if nums==1:
-            spawnWorker(0)
+            self.spawnWorker(0)
             return
         if nums!=None:
             range=max(len(self.taskmap)/nums,2)
         p=0
         while True:
-            spawnWorker(p)
+            self.spawnWorker(p)
             nums-=1
             if nums==0:
                 break
@@ -102,3 +109,6 @@ class mergesupervisor(syncClassBase):
                     p=self.taskmak[p].next
             except Exception as e:
                 break
+
+if __name__ == '__main__':
+    pass
