@@ -10,5 +10,7 @@ class intermergeworker(Thread):
     Attentez: There exist some risks - when two nodes are trying to modify one segment-
     tree-node simultaneously, an unexpected result may occur: an earlier one may override
     the later one. So periodic overhual or correction is needed.
+
+    It's identical between different nodes
     '''
     pass
