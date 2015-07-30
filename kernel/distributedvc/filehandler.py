@@ -63,7 +63,7 @@ class fd(syncClassBase):
         self.latestPatch+=1
         self.intravisor.announceNewTask(self.latestPatch)
         self.intravisor.batchWorker()
-        print meta
+        #print meta
 
     @sync_(1)
     def getLatestPatch(self):

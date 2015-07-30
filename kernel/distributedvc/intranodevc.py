@@ -6,6 +6,7 @@ import traceback
 import time
 import cStringIO
 import filehandler
+import config.kernelinfo
 
 class mergeworker(Thread):
     '''
@@ -14,12 +15,26 @@ class mergeworker(Thread):
     with all the workers on one same file sharing the same, responsible for spawning
     worker, assigning his pinpoint(one node on the linked-list to merge), and permits
     his requirement to merge new pair or forbid this task and kill him.
+
+    Intramerge Process:
+    All the patches are stored in a linked-list, with next pointer stored in metadata.
+    The first of the list is always patch0, and no explicit last node is defined. When
+    there's no file, the end has been reached.
+    Each worker insist working on a PINPOINT, that is, one fixed patch-id to be one
+    participant of merge. The other one is always its next. After merging it, remove
+    the non-pinpoint node out-of linked-list, modifying metadata correspondingly.
+
+    LEGEND:
+    0 -> 1 -> 2 -> 5 ->
+    ^         ^
+
     '''
     def __init__(self,supervisor,pinpoint):
         Thread.__init__(self)
         self.supervisor=supervisor
         self.pinpoint=pinpoint
         self.fd=self.supervisor.filed
+        self.havemerged=0
 
     def run(self):
         dieof=mergesupervisor.REPORT_DEATH_DIEOF_EXCEPTION
@@ -43,6 +58,7 @@ class mergeworker(Thread):
                 tFile=filemap[tMeta[filehandler.fd.METAKEY_TYPE]]((cStringIO.StringIO(tCont),int(tMeta[filehandler.fd.METAKEY_TIMESTAMP])))
                 self.ppFile.mergeWith(tFile)
                 print u"Merged",self.nextTask
+                self.havemerged+=1
                 self.prevTask=self.nextTask
                 self.nextTask=self.supervisor.taskmap[self.nextTask].next
             while True:
@@ -57,6 +73,7 @@ class mergeworker(Thread):
                     uploadFile()
                     workOnMerge()
         except Exception as e:
+            # TODO: conflict resolver
             traceback.print_exc()
             raise e
         finally:
@@ -91,8 +108,9 @@ class mergesupervisor(syncClassBase):
             self.taskmap.pop(oldpatch)
         if (patchnum not in self.taskmap) or (self.taskmap[patchnum].status==mergesupervisor.TASKSTATUS_WORKING):
             return mergesupervisor.REPORT_TASK_RESPONSE_REJECT
-        # WARNING: may add periodic commit.
         self.taskmap[patchnum].status=mergesupervisor.TASKSTATUS_WORKING
+        if config.kernelinfo.auto_commit_per_intramerge>0 and worker.havemerged % config.kernelinfo.auto_commit_per_intramerge==0:
+            return mergesupervisor.REPORT_TASK_RESPONSE_COMMIT
         return mergesupervisor.REPORT_TASK_RESPONSE_CONFIRMED
 
     REPORT_DEATH_DIEOF_STARVATION=0
