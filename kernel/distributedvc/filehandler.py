@@ -5,6 +5,7 @@ from utils.functionhelper import *
 import config.nodeinfo
 from kernel.filetype.kvmap import kvmap
 from demonoupload import *
+from intranodevc
 
 class fd(syncClassBase):
     '''
@@ -45,6 +46,7 @@ class fd(syncClassBase):
         self.filename=filename
         self.io=io
         self.metadata=None
+        self.intravisor=intranodevc.mergesupervisor(self)
         self.latestPatch=None
 
     @sync_(0)
@@ -64,9 +66,12 @@ class fd(syncClassBase):
             prg=0
             prgto=self.io.getinfo(self.getPatchName(prg))
             while prgto!=None:
-                prg=int(prgto[fd.INTRA_PATCH_METAKEY_NEXT_PATCH])
+                nprg=int(prgto[fd.INTRA_PATCH_METAKEY_NEXT_PATCH])
+                self.intravisor.announceNewTask(prg,nprg)
+                prg=nprg
                 prgto=self.io.getinfo(self.getPatchName(prg))
             self.latestPatch=prg-1
+            self.intravisor.batchWorker()
         return self.latestPatch
 
     @sync_(2)
