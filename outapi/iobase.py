@@ -18,3 +18,6 @@ class iobase:
     def getinfo(self,filename):
         '''if exist, return data buffer. Otherwise return None'''
         raise ex.exception_logic.NotImplementedException("")
+
+    def delete(self,filename):
+        raise ex.exception_logic.NotImplementedException("")

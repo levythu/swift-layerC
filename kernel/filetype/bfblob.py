@@ -8,6 +8,11 @@ class bfblob(filetype):
     """most brute-force file type, no comparison before merge, just compare the timestamp of the file as a whole and
        the new one replaces the obsolete one."""
 
+    _Type=u"integral blob file"
+    @classmethod
+    def getType(cls):
+        return cls._Type
+
     def __init__(self,file0):
         filetype.__init__(self,file0)
         self.oriFile=file0

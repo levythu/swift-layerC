@@ -25,6 +25,7 @@ class fd(syncClassBase):
     # METADATA must not contain "_" and only lowercase is permitted
     METAKEY_LATEST_PATCH=u"latest-patch-num"    # DEPRECATED.
     METAKEY_TIMESTAMP=u"timestamp"
+    METAKEY_TYPE=u"typestamp"
 
     '''Here are the contants in intra-patch's metadata'''
     INTRA_PATCH_METAKEY_NEXT_PATCH=u"next-patch"
@@ -55,10 +56,14 @@ class fd(syncClassBase):
         meta={}
         meta[fd.METAKEY_TIMESTAMP]=unicode(str(patchfile.getTimestamp()))
         meta[fd.INTRA_PATCH_METAKEY_NEXT_PATCH]=unicode(str(self.latestPatch+2))
+        meta[fd.METAKEY_TYPE]=patchfile.getType()
         t=patchfile.writeBack()
         self.io.put(self.getPatchName(self.latestPatch+1),t.getvalue(),meta)
         t.close()
         self.latestPatch+=1
+        self.intravisor.announceNewTask(self.latestPatch)
+        self.intravisor.batchWorker()
+        print meta
 
     @sync_(1)
     def getLatestPatch(self):
@@ -80,6 +85,18 @@ class fd(syncClassBase):
             self.metadata=self.io.getinfo(self.filename)
         return self.metadata
 
+    def _removeAllPatch(self):
+        '''Attentez: only for debug'''
+        prg=0
+        prgto=self.io.getinfo(self.getPatchName(prg))
+        while prgto!=None:
+            nprg=int(prgto[fd.INTRA_PATCH_METAKEY_NEXT_PATCH])
+            self.io.delete(self.getPatchName(prg))
+            print u"Delete patch:",self.getPatchName(prg)
+            prg=nprg
+            prgto=self.io.getinfo(self.getPatchName(prg))
+
+
 if __name__ == '__main__':
     t=kvmap(None)
     t.checkOut()
@@ -87,4 +104,4 @@ if __name__ == '__main__':
     t.checkIn()
 
     q=fd.getInstance(u"test1",demoio)
-    q.getLatestPatch()
+    q.commitPatch(t)

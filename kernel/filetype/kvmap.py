@@ -37,6 +37,11 @@ class kvmap(filetype):
     fileMagic="KVMP"
     glbEncode="utf-8"
 
+    _Type=u"key-value map file"
+    @classmethod
+    def getType(cls):
+        return cls._Type
+
     def __init__(self,file0):
         if type(file0)==tuple:
             filetype.__init__(self,file0)

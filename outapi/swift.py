@@ -61,3 +61,6 @@ class io_swift(iobase):
             if key.startswith(io_swift.metadata_prefix):
                 nh[key[len(io_swift.metadata_prefix):]]=h[key]
         return nh
+
+    def delete(self,filename):
+        self.swiftClient.delete_object(container=self.container,obj=filename)

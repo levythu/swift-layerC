@@ -66,7 +66,7 @@ class mergesupervisor(syncClassBase):
         self.workersAlive-=1
         self.taskmap[worker.pinpoint].status=mergesupervisor.TASKSTATUS_IDLE
         if self.workersAlive==0 and len(self.taskmap)>1:
-            #time.sleep(1)
+            time.sleep(1)
             tt=Thread(target=mergesupervisor.batchWorker,args=[self])
             tt.start()
 
@@ -89,7 +89,7 @@ class mergesupervisor(syncClassBase):
         '''Only the two arguments can be specified one, nums indicating the whole number
         and range indicating the interval. The first one has higher priority, with both
         absent, nums=1 is the default.'''
-        if self.workersAlive>0 or len(self.taskmap)==1:
+        if self.workersAlive>0 or len(self.taskmap)<=1:
             return
         if nums==None and range==None:
             nums=1
