@@ -88,6 +88,7 @@ class kvmap(filetype):
                 j+=1
         self.readData=tmpList
         self.haveRead=len(self.readData)
+        self.file0=(self.file0[0],max(self.file0[1],file2.file0[1]))
 
     def lazyRead(self,pos=-1):
         if pos==-1:

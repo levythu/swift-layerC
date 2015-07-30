@@ -22,6 +22,7 @@ class mergeworker(Thread):
         self.fd=self.supervisor.filed
 
     def run(self):
+        dieof=mergesupervisor.REPORT_DEATH_DIEOF_EXCEPTION
         try:
             self.ppMeta,self.ppCont=self.fd.io.get(self.fd.getPatchName(self.pinpoint))
             self.ppFile=filemap[self.ppMeta[filehandler.fd.METAKEY_TYPE]]((cStringIO.StringIO(self.ppCont),int(self.ppMeta[filehandler.fd.METAKEY_TIMESTAMP])))
@@ -29,11 +30,10 @@ class mergeworker(Thread):
             self.nextTask=self.supervisor.taskmap[self.pinpoint].next
 
             def uploadFile():
-                return
                 if self.prevTask==None:
                     return
                 self.ppMeta[filehandler.fd.METAKEY_TIMESTAMP]=unicode(str(self.ppFile.getTimestamp()))
-                self.ppMeta[fd.INTRA_PATCH_METAKEY_NEXT_PATCH]=unicode(str(self.nextTask))
+                self.ppMeta[filehandler.fd.INTRA_PATCH_METAKEY_NEXT_PATCH]=unicode(str(self.nextTask))
                 buf=self.ppFile.writeBack()
                 self.fd.io.put(self.fd.getPatchName(self.pinpoint),buf.getvalue(),self.ppMeta)
                 buf.close()
@@ -51,6 +51,7 @@ class mergeworker(Thread):
                     workOnMerge()
                 elif cmd==mergesupervisor.REPORT_TASK_RESPONSE_REJECT:
                     uploadFile()
+                    dieof=mergesupervisor.REPORT_DEATH_DIEOF_COMMAND
                     return
                 elif cmd==mergesupervisor.REPORT_TASK_RESPONSE_COMMIT:
                     uploadFile()
@@ -59,8 +60,7 @@ class mergeworker(Thread):
             traceback.print_exc()
             raise e
         finally:
-            #self.supervisor.reportDeath(self,mergesupervisor.REPORT_DEATH_DIEOF_EXCEPTION)
-            pass
+            self.supervisor.reportDeath(self,dieof)
 
 class mergesupervisor(syncClassBase):
     '''
