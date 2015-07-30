@@ -1,8 +1,11 @@
 # coding=utf-8
 from utils.decorator.synchronizer import syncClassBase,sync,sync_
 from threading import Thread
+from kernel.filetype import filemap
 import traceback
 import time
+import cStringIO
+import filehandler
 
 class mergeworker(Thread):
     '''
@@ -16,15 +19,48 @@ class mergeworker(Thread):
         Thread.__init__(self)
         self.supervisor=supervisor
         self.pinpoint=pinpoint
+        self.fd=self.supervisor.filed
 
     def run(self):
         try:
-            print self.supervisor.taskmap
-        except:
-            tb = traceback.format_exc()
-        finally:
-            self.supervisor.reportDeath(self,mergesupervisor.REPORT_DEATH_DIEOF_EXCEPTION)
+            self.ppMeta,self.ppCont=self.fd.io.get(self.fd.getPatchName(self.pinpoint))
+            self.ppFile=filemap[self.ppMeta[filehandler.fd.METAKEY_TYPE]]((cStringIO.StringIO(self.ppCont),int(self.ppMeta[filehandler.fd.METAKEY_TIMESTAMP])))
+            self.prevTask=None
+            self.nextTask=self.supervisor.taskmap[self.pinpoint].next
 
+            def uploadFile():
+                return
+                if self.prevTask==None:
+                    return
+                self.ppMeta[filehandler.fd.METAKEY_TIMESTAMP]=unicode(str(self.ppFile.getTimestamp()))
+                self.ppMeta[fd.INTRA_PATCH_METAKEY_NEXT_PATCH]=unicode(str(self.nextTask))
+                buf=self.ppFile.writeBack()
+                self.fd.io.put(self.fd.getPatchName(self.pinpoint),buf.getvalue(),self.ppMeta)
+                buf.close()
+                print u"Update file",self.fd.getPatchName(self.pinpoint),u"successfully."
+            def workOnMerge():
+                tMeta,tCont=self.fd.io.get(self.fd.getPatchName(self.nextTask))
+                tFile=filemap[tMeta[filehandler.fd.METAKEY_TYPE]]((cStringIO.StringIO(tCont),int(tMeta[filehandler.fd.METAKEY_TIMESTAMP])))
+                self.ppFile.mergeWith(tFile)
+                print u"Merged",self.nextTask
+                self.prevTask=self.nextTask
+                self.nextTask=self.supervisor.taskmap[self.nextTask].next
+            while True:
+                cmd=self.supervisor.reportNewTask(self,self.nextTask,self.prevTask)
+                if cmd==mergesupervisor.REPORT_TASK_RESPONSE_CONFIRMED:
+                    workOnMerge()
+                elif cmd==mergesupervisor.REPORT_TASK_RESPONSE_REJECT:
+                    uploadFile()
+                    return
+                elif cmd==mergesupervisor.REPORT_TASK_RESPONSE_COMMIT:
+                    uploadFile()
+                    workOnMerge()
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+        finally:
+            #self.supervisor.reportDeath(self,mergesupervisor.REPORT_DEATH_DIEOF_EXCEPTION)
+            pass
 
 class mergesupervisor(syncClassBase):
     '''
@@ -49,10 +85,11 @@ class mergesupervisor(syncClassBase):
     REPORT_TASK_RESPONSE_REJECT=1           # Reject the work, the worker should commit all the change and suicide
     REPORT_TASK_RESPONSE_COMMIT=2           # Approve, on condition that the status merging be commited first
     @sync_(0)
-    def reportNewTask(self,worker,patchnum,oldpatch):
-        self.taskmap[worker.pinpoint].next=patchnum  #Attentez: only correct on this condition: otherwise double-linked list is needed
-        self.taskmap.pop(oldpatch)
-        if self.taskmap[patchnum].status==mergesupervisor.TASKSTATUS_WORKING:
+    def reportNewTask(self,worker,patchnum,oldpatch=None):
+        if oldpatch!=None:
+            self.taskmap[worker.pinpoint].next=patchnum  #Attentez: only correct on this condition: otherwise double-linked list is needed
+            self.taskmap.pop(oldpatch)
+        if (patchnum not in self.taskmap) or (self.taskmap[patchnum].status==mergesupervisor.TASKSTATUS_WORKING):
             return mergesupervisor.REPORT_TASK_RESPONSE_REJECT
         # WARNING: may add periodic commit.
         self.taskmap[patchnum].status=mergesupervisor.TASKSTATUS_WORKING
