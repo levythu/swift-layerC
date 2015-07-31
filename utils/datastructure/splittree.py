@@ -19,7 +19,7 @@ parent(i)   =(i^layer(i))|(layer(i)<<1)=(i^(i&-i))|((i&-i)<<1)
 By Levy
 '''
 def fromNodeToLeaf(n):
-    return n<<1
+    return (n<<1)+1
 
 def fromLeaftoNode(i):
     return i>>1
