@@ -21,6 +21,9 @@ By Levy
 def fromNodeToLeaf(n):
     return (n<<1)+1
 
+def isLeaf(n):
+    return n&1==1
+
 def fromLeaftoNode(i):
     return i>>1
 
