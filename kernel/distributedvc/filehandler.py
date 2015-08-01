@@ -24,7 +24,7 @@ class fd(syncClassBase):
     # no patch exists, there should not be such a key.
     # METADATA must not contain "_" and only lowercase is permitted
     FILE_METAKEY_LATEST_PATCH=u"latest-patch-num"    # DEPRECATED.
-    
+
     METAKEY_TIMESTAMP=u"timestamp"
     METAKEY_TYPE=u"typestamp"
 
@@ -32,7 +32,10 @@ class fd(syncClassBase):
     INTRA_PATCH_METAKEY_NEXT_PATCH=u"next-patch"
 
     '''Here are the contants in inter-patch's metadata'''
-    INTER_PATCH_METAKEY_SYNCTIME=u"sync-time"
+    INTER_PATCH_METAKEY_SYNCTIME1=u"sync-time-l"
+    INTER_PATCH_METAKEY_SYNCTIME2=u"sync-time-r"
+
+    CANONICAL_VERSION_METAKEY_SYNCTIME=u"sync-time"
 
     # = Constants END = Constants END = Constants END = Constants END = Constants END =
 
@@ -48,6 +51,9 @@ class fd(syncClassBase):
 
     def getGlobalPatchName(self,splittreeid):
         return unicode(self.filename+".splittree"+str(splittreeid)+".patch")
+
+    def getCanonicalVersionName(self):
+        return unicode(self.filename+".cversion")
 
     def __init__(self,filename,io):
         syncClassBase.__init__(self,3)

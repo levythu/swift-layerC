@@ -1,9 +1,13 @@
 # coding=utf-8
 from utils.decorator.synchronizer import syncClassBase,sync,sync_
 from threading import Thread
+from kernel.filetype import filemap
 import ex.exception_logic
 import utils.datastructure.splittree
+import filehandler
 import config.nodeinfo
+import time
+import cStringIO
 
 class intermergeworker(Thread):
     '''
@@ -16,6 +20,9 @@ class intermergeworker(Thread):
 
     It's identical between different nodes
     '''
+
+    rootnodeid=utils.datastructure.splittree.getRootLable(config.nodeinfo.node_nums_in_all)
+
     def __init__(self,supervisor,pinpoint=None,isbubble=True):
         Thread.__init__(self)
         self.supervisor=supervisor
@@ -33,11 +40,100 @@ class intermergeworker(Thread):
             filename=self.fd.getPatchName(0,utils.datastructure.splittree.fromLeaftoNode(nodeid))
         else:
             filename=self.fd.getGlobalPatchName(nodeid)
-        
+        tm=int(round(time.time()*1000))
+        tf=self.fd.io.get(filename)
+        if tf==None:
+            return None
+        ppMeta,ppCont=tf
+        ppFile=filemap[ppMeta[filehandler.fd.METAKEY_TYPE]]((cStringIO.StringIO(ppCont),int(ppMeta[filehandler.fd.METAKEY_TIMESTAMP])))
+        return (ppFile,tm)
 
+    def gleanInfo(self,nodeid,cachedict={}):
+        # cachedict is a dict file: number(nodeid) -> (filetype, readtime, (timel,timer))
+        # Attentez: this function may modify the cachedict. So ABANDON it after this function call!
+        if utils.datastructure.splittree.isLeaf(nodeid):
+            if nodeid in cachedict:
+                return cachedict[nodeid]
+            tp=self.readInfo(nodeid)
+            if tp==None:
+                return None
+            fl,tm=tp
+            return (fl,tm,(tm,tm))
+        l=utils.datastructure.splittree.left(nodeid)
+        r=utils.datastructure.splittree.right(nodeid)
+        ln=rn=False
+        if l in cachedict:
+            if cachedict[l]==None:
+                ln=True
+            else:
+                lfile,ltime,_=cachedict[l]
+        else:
+            tp=self.readInfo(l)
+            if tp!=None:
+                lfile,ltime=tp
+            else:
+                ln=True
+        if r in cachedict:
+            if cachedict[r]==None:
+                rn=True
+            else:
+                rfile,rtime,_=cachedict[r]
+        else:
+            tp=self.readInfo(r)
+            if tp!=None:
+                rfile,rtime=tp
+            else:
+                rn=True
+        if ln and rn:
+            return None
+        elif ln:
+            lfile=rfile
+        elif rn:
+            pass
+        elif:
+            lfile.mergeWith(rfile)
+        ut=int(round(time.time()*1000))
+        return (lfile,ut,(ltime,rtime))
 
     def run(self):
-        pass
+        if self.isbubble:
+            nw=self.pinpoint
+            pnw=0
+            cacher={}
+            while pnw!=rootnodeid:
+                tp=self.glean(nw,cacher)
+                if tp==None:
+                    # ABORT!
+                pfile,ut,(ltime,rtime)=tp
+                notMove=False
+                if not utils.datastructure.splittree.isLeaf(nw):
+                    pmeta=self.fd.io.getinfo(self.fd.getGlobalPatchName(nw))
+                    if pmeta==None or (pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]<ltime and pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]<rtime):
+                        # Yep! update the online data
+                        if pmeta==None:
+                            pmeta={}
+                            pmeta[filehandler.fd.METAKEY_TYPE]=pfile.getType()
+                        pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]=ltime
+                        pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]=rtime
+                        pmeta[filehandler.fd.METAKEY_TIMESTAMP]=pfile.getTimestamp()
+                        strm=pfile.writeBack()
+                        self.fd.io.put(self.fd.getGlobalPatchName(nw),strm.getvalue(),pmeta)
+                        strm.close()
+                    elif pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]>=ltime and pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]>=rtime:
+                        # The local version is outdated. Abort propagating
+                        # ABORT!
+                        pass
+                    else:
+                        # The two version cannot cover each other, a reglean is needed.
+                        notMove=True
+                        pass
+                cacher={}
+                if not notMove:
+                    cacher[nw]=(pfile,ut,(ltime,rtime))
+                    pnw=nw
+                    nw=utils.datastructure.splittree.parent(nw)
+        else:
+            pass
 
 class intermergesupervisor(syncClassBase):
     '''
