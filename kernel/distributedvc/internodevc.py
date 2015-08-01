@@ -95,6 +95,35 @@ class intermergeworker(Thread):
         ut=int(round(time.time()*1000))
         return (lfile,ut,(ltime,rtime))
 
+    def makeCanonicalFile(self,cache={}):
+        if rootnodeid in cache:
+            rootpatch=cache[rootnodeid]
+            if rootpatch==None:
+                return
+            rpFile,rpTime,_=rootpatch
+        else:
+            rootpatch=self.readInfo(rootnodeid)
+            if rootpatch==None:
+                return
+            rpFile,rpTime=rootpatch
+        oriFile=self.fd.io.get(self.fd.filename)
+        if oriFile!=None:
+            oContent,oMeta=oriFile
+            oFile=filemap[oMeta[filehandler.fd.METAKEY_TYPE]]((cStringIO.StringIO(oContent),int(oMeta[filehandler.fd.METAKEY_TIMESTAMP])))
+            oFile.mergeWith(rpFile)
+        else:
+            oFile=rpFile
+        tarMeta=self.fd.io.getinfo(self.fd.getCanonicalVersionName())
+        if tarMeta==None or tarMeta[filehandler.fd.CANONICAL_VERSION_METAKEY_SYNCTIME]<rpTime:
+            if tarMeta==None:
+                tarMeta={}
+                tarMeta[filehandler.fd.METAKEY_TYPE]=oFile.getType()
+            tarMeta[filehandler.fd.CANONICAL_VERSION_METAKEY_SYNCTIME]=rpTime
+            tarMeta[filehandler.fd.METAKEY_TIMESTAMP]=oFile.getTimestamp()
+            buf=oFile.writeBack()
+            self.fd.io.put(self.fd.getCanonicalVersionName(),buf.getvalue(),tarMeta)
+            buf.close()
+
     def run(self):
         if self.isbubble:
             nw=self.pinpoint
@@ -132,7 +161,9 @@ class intermergeworker(Thread):
                     cacher[nw]=(pfile,ut,(ltime,rtime))
                     pnw=nw
                     nw=utils.datastructure.splittree.parent(nw)
+            self.makeCanonicalFile(cacher)
         else:
+            # TODO: add not-bubbling info-glean
             pass
 
 class intermergesupervisor(syncClassBase):
