@@ -118,5 +118,12 @@ if __name__ == '__main__':
     t.kvm[u"huha"]=(u"baomihua",2)
     t.checkIn()
 
+    # meta={}
+    # meta[fd.METAKEY_TIMESTAMP]=unicode(str(t.getTimestamp()))
+    # meta[fd.METAKEY_TYPE]=t.getType()
+    # bf=t.writeBack()
+    # demoio.put(u"test1",bf.getvalue(),meta)
+    # bf.close()
+
     q=fd.getInstance(u"test1",demoio)
     q.commitPatch(t)

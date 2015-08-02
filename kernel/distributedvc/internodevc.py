@@ -20,6 +20,8 @@ class intermergeworker(Thread):
 
     It's identical between different nodes
     '''
+    # WARN: considering the inconsistency of swift, timestamp based on file, not readtime is
+    # needed. (NOT MODIFIED YET)
 
     rootnodeid=utils.datastructure.splittree.getRootLable(config.nodeinfo.node_nums_in_all)
 
@@ -97,19 +99,19 @@ class intermergeworker(Thread):
         return (lfile,ut,(ltime,rtime))
 
     def makeCanonicalFile(self,cache={}):
-        if rootnodeid in cache:
-            rootpatch=cache[rootnodeid]
+        if intermergeworker.rootnodeid in cache:
+            rootpatch=cache[intermergeworker.rootnodeid]
             if rootpatch==None:
                 return
             rpFile,rpTime,_=rootpatch
         else:
-            rootpatch=self.readInfo(rootnodeid)
+            rootpatch=self.readInfo(intermergeworker.rootnodeid)
             if rootpatch==None:
                 return
             rpFile,rpTime=rootpatch
         oriFile=self.fd.io.get(self.fd.filename)
         if oriFile!=None:
-            oContent,oMeta=oriFile
+            oMeta,oContent=oriFile
             oFile=filemap[oMeta[filehandler.fd.METAKEY_TYPE]]((cStringIO.StringIO(oContent),int(oMeta[filehandler.fd.METAKEY_TIMESTAMP])))
             oFile.mergeWith(rpFile)
         else:
@@ -131,8 +133,8 @@ class intermergeworker(Thread):
                 nw=self.pinpoint
                 pnw=0
                 cacher={}
-                while pnw!=rootnodeid:
-                    tp=self.glean(nw,cacher)
+                while pnw!=intermergeworker.rootnodeid:
+                    tp=self.gleanInfo(nw,cacher)
                     if tp==None:
                         # ABORT
                         return
@@ -167,7 +169,7 @@ class intermergeworker(Thread):
                 if utils.datastructure.splittree.isLeaf(self.pinpoint):
                     return
                 while True:
-                    tp=self.glean(self.pinpoint)
+                    tp=self.gleanInfo(self.pinpoint)
                     if tp==None:
                         # ABORT
                         return
