@@ -52,7 +52,8 @@ class fd(syncClassBase):
     def getGlobalPatchName(self,splittreeid):
         return unicode(self.filename+".splittree"+str(splittreeid)+".patch")
 
-    def getCanonicalVersionName(self):
+    def getCanonicalVersionName(self):    def __init__(self,supervisor,pinpoint=None,isbubble=True):
+
         return unicode(self.filename+".cversion")
 
     def __init__(self,filename,io):
