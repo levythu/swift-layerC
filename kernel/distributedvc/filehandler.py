@@ -6,6 +6,7 @@ import config.nodeinfo
 from kernel.filetype.kvmap import kvmap
 from demonoupload import *
 import intranodevc
+import internodevc
 
 class fd(syncClassBase):
     '''
@@ -61,6 +62,7 @@ class fd(syncClassBase):
         self.io=io
         self.metadata=None
         self.intravisor=intranodevc.mergesupervisor(self)
+        self.intervisor=internodevc.intermergesupervisor(self)
         self.latestPatch=None
 
     @sync_(0)

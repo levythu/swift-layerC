@@ -53,6 +53,8 @@ class mergeworker(Thread):
                 self.fd.io.put(self.fd.getPatchName(self.pinpoint),buf.getvalue(),self.ppMeta)
                 buf.close()
                 print u"Update file",self.fd.getPatchName(self.pinpoint),u"successfully."
+                if self.pinpoint==0:
+                    self.fd.intervisor.propagateUpModification()    # Trigger propagation on global tree
             def workOnMerge():
                 tMeta,tCont=self.fd.io.get(self.fd.getPatchName(self.nextTask))
                 tFile=filemap[tMeta[filehandler.fd.METAKEY_TYPE]]((cStringIO.StringIO(tCont),int(tMeta[filehandler.fd.METAKEY_TIMESTAMP])))

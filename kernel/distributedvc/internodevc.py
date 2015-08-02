@@ -157,7 +157,6 @@ class intermergeworker(Thread):
                         else:
                             # The two version cannot cover each other, a reglean is needed.
                             notMove=True
-                            pass
                     cacher={}
                     if not notMove:
                         cacher[nw]=(pfile,ut,(ltime,rtime))
