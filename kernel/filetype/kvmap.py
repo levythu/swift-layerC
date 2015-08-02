@@ -145,6 +145,11 @@ class kvmap(filetype):
         else:
             return f
 
+    def loadIntoMem(self):
+        while not self.finishRead:
+            self.lazyRead()
+        return self
+
     def checkOut(self):
         '''
         Checkout the content of file to a map for edit.

@@ -4,7 +4,9 @@ from utils.decorator.synchronizer import syncClassBase,sync,sync_
 from utils.functionhelper import *
 import config.nodeinfo
 from kernel.filetype.kvmap import kvmap
+from kernel.filetype import filemap
 from demonoupload import *
+import cStringIO
 import intranodevc
 import internodevc
 
@@ -100,6 +102,18 @@ class fd(syncClassBase):
             self.metadata=self.io.getinfo(self.filename)
         return self.metadata
 
+    def getFile(self):
+        # strategy is, to fetch the canonical file, if not existing (indicating no patch),
+        # fetch the original file. Only neither of them exist, a none value will be
+        # returned showing that the file does not exist.
+        tFile=self.io.get(self.getCanonicalVersionName())
+        if tFile==None:
+            tFile=self.io.get(self.filename)
+            if tFile==None:
+                return None
+        tMeta,tCont=tFile
+        return filemap[tMeta[fd.METAKEY_TYPE]]((cStringIO.StringIO(tCont),int(tMeta[fd.METAKEY_TIMESTAMP])))
+
     def _removeAllPatch(self):
         '''Attentez: only for debug'''
         prg=0
@@ -113,10 +127,10 @@ class fd(syncClassBase):
 
 
 if __name__ == '__main__':
-    t=kvmap(None)
-    t.checkOut()
-    t.kvm[u"huha"]=(u"baomihua",2)
-    t.checkIn()
+    #    t=kvmap(None)
+    #    t.checkOut()
+    #    t.kvm[u"huha"]=(u"baomihua",2)
+    #    t.checkIn()
 
     # meta={}
     # meta[fd.METAKEY_TIMESTAMP]=unicode(str(t.getTimestamp()))
@@ -125,5 +139,7 @@ if __name__ == '__main__':
     # demoio.put(u"test1",bf.getvalue(),meta)
     # bf.close()
 
-    q=fd.getInstance(u"test1",demoio)
-    q.commitPatch(t)
+    #    q=fd.getInstance(u"test1",demoio)
+    #    q.commitPatch(t)
+
+    print fd.getInstance(u"test1",demoio).getFile().loadIntoMem().writeBack().getvalue()
