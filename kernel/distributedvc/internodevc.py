@@ -88,9 +88,10 @@ class intermergeworker(Thread):
             return None
         elif ln:
             lfile=rfile
+            ltime=rtime
         elif rn:
-            pass
-        elif:
+            rtime=ltime
+        else:
             lfile.mergeWith(rfile)
         ut=int(round(time.time()*1000))
         return (lfile,ut,(ltime,rtime))
@@ -125,18 +126,54 @@ class intermergeworker(Thread):
             buf.close()
 
     def run(self):
-        if self.isbubble:
-            nw=self.pinpoint
-            pnw=0
-            cacher={}
-            while pnw!=rootnodeid:
-                tp=self.glean(nw,cacher)
-                if tp==None:
-                    # ABORT!
-                pfile,ut,(ltime,rtime)=tp
-                notMove=False
-                if not utils.datastructure.splittree.isLeaf(nw):
-                    pmeta=self.fd.io.getinfo(self.fd.getGlobalPatchName(nw))
+        try:
+            if self.isbubble:
+                nw=self.pinpoint
+                pnw=0
+                cacher={}
+                while pnw!=rootnodeid:
+                    tp=self.glean(nw,cacher)
+                    if tp==None:
+                        # ABORT
+                        return
+                    pfile,ut,(ltime,rtime)=tp
+                    notMove=False
+                    if not utils.datastructure.splittree.isLeaf(nw):
+                        pmeta=self.fd.io.getinfo(self.fd.getGlobalPatchName(nw))
+                        if pmeta==None or (pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]<ltime and pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]<rtime):
+                            # Yep! update the online data
+                            if pmeta==None:
+                                pmeta={}
+                                pmeta[filehandler.fd.METAKEY_TYPE]=pfile.getType()
+                            pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]=ltime
+                            pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]=rtime
+                            pmeta[filehandler.fd.METAKEY_TIMESTAMP]=pfile.getTimestamp()
+                            strm=pfile.writeBack()
+                            self.fd.io.put(self.fd.getGlobalPatchName(nw),strm.getvalue(),pmeta)
+                            strm.close()
+                        elif pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]>=ltime and pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]>=rtime:
+                            # The local version is outdated. Abort propagating
+                            return
+                        else:
+                            # The two version cannot cover each other, a reglean is needed.
+                            notMove=True
+                            pass
+                    cacher={}
+                    if not notMove:
+                        cacher[nw]=(pfile,ut,(ltime,rtime))
+                        pnw=nw
+                        nw=utils.datastructure.splittree.parent(nw)
+                self.makeCanonicalFile(cacher)
+            else:
+                if utils.datastructure.splittree.isLeaf(self.pinpoint):
+                    return
+                while True:
+                    tp=self.glean(self.pinpoint)
+                    if tp==None:
+                        # ABORT
+                        return
+                    pfile,ut,(ltime,rtime)=tp
+                    pmeta=self.fd.io.getinfo(self.fd.getGlobalPatchName(self.pinpoint))
                     if pmeta==None or (pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]<ltime and pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]<rtime):
                         # Yep! update the online data
                         if pmeta==None:
@@ -146,25 +183,17 @@ class intermergeworker(Thread):
                         pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]=rtime
                         pmeta[filehandler.fd.METAKEY_TIMESTAMP]=pfile.getTimestamp()
                         strm=pfile.writeBack()
-                        self.fd.io.put(self.fd.getGlobalPatchName(nw),strm.getvalue(),pmeta)
+                        self.fd.io.put(self.fd.getGlobalPatchName(self.pinpoint),strm.getvalue(),pmeta)
                         strm.close()
+                        break
                     elif pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]>=ltime and pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]>=rtime:
                         # The local version is outdated. Abort propagating
-                        # ABORT!
-                        pass
+                        return
                     else:
                         # The two version cannot cover each other, a reglean is needed.
-                        notMove=True
                         pass
-                cacher={}
-                if not notMove:
-                    cacher[nw]=(pfile,ut,(ltime,rtime))
-                    pnw=nw
-                    nw=utils.datastructure.splittree.parent(nw)
-            self.makeCanonicalFile(cacher)
-        else:
-            # TODO: add not-bubbling info-glean
-            pass
+        finally:
+            self.supervisor.notifyDeath(self)
 
 class intermergesupervisor(syncClassBase):
     '''
@@ -180,6 +209,19 @@ class intermergesupervisor(syncClassBase):
     def __init__(self,filed):
         syncClassBase.__init__(self,2)
         self.filed=filed
+        self.isworking=0
 
+    @sync
     def propagateUpModification(self):
-        pass
+        if self.isworking>0:
+            return
+        p=intermergeworker(self)
+        self.isworking+=1
+        p.start()
+
+    @sync
+    def notifyDeath(self,worker):
+        self.isworking-=1
+
+if __name__ == '__main__':
+    pass
