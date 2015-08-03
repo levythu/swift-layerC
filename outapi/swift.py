@@ -21,6 +21,10 @@ class io_swift(iobase):
         self.swiftClient=makeConnection(*args, **kw)
         self.container=u"testcon"
 
+    def generateUniqueID(self):
+        # TODO: modify it!
+        return u"io_swift:It needs modify!"
+
     def put(self,filename,content,info={}):
         # WARN: add MD5 checksum in the future
         toput={}

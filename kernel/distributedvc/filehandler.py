@@ -47,7 +47,7 @@ class fd(syncClassBase):
 
     @staticmethod
     def getInstance(filename,io):
-        return fd.global_file_map.declare(filename,fd(filename,io))
+        return fd.global_file_map.declare(filename+io.generateUniqueID(),fd(filename,io))
 
     def getPatchName(self,patchnumber,nodenumber=config.nodeinfo.node_number):
         return unicode(self.filename+".proxy"+str(nodenumber)+".patch"+str(patchnumber))
