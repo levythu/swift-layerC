@@ -43,6 +43,13 @@ class kvmap(filetype):
         return cls._Type
 
     def __init__(self,file0):
+        # If invoke with (src,timestamp), establish a existing file with src and timestamp. lazyRead will
+        # then try to read data from src if needed.
+        # If file0=src, especially src is a string, this file is a new one. No data will read from
+        # src and when writeBack, the file-based location will be used.
+
+        # Things are different with a stream source. file0=src(stream), then its totally useless and will
+        # NEVER get accessed. So passing a None here is quite feasible is necessary.
         if type(file0)==tuple:
             filetype.__init__(self,file0)
             self.finishRead=False

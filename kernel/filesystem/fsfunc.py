@@ -1,8 +1,12 @@
 # coding=utf-8
 
 from kernel.filesystem import root_iNode_name
-import ex.exception_folder
+from kernel.distributedvc.filehandler import fd
+from utils.uniqueid import genGlobalUniqueName
+from kernel.filetype.kvmap import kvmap
+import utils.timestamp
 import primitiveFunc
+import ex.exception_folder
 
 class fs:
     def __init__(self,io):
@@ -24,3 +28,47 @@ class fs:
             if frominode==None:
                 raise ex.exception_folder.iNodeNonexistException(u"invalid inode @ locate")
         return frominode
+
+    def mkdir(self,foldername,frominode):
+        # not checking existence of the created folder! May overflow depending on the
+        # conflict resolving strategy
+        nf=fd.getInstance(genGlobalUniqueName(),self.io)
+        
+        fmap=kvmap(None)
+        fmap.checkOut()
+        fmap.kvm[u"."]=(nf.filename,utils.timestamp.getTimestamp())
+        fmap.kvm[u".."]=(frominode,utils.timestamp.getTimestamp())
+        fmap.checkIn()
+        nf.commitPatch(fmap)
+
+        fmap=kvmap(None)
+        fmap.checkOut()
+        fmap.kvm[foldername]=(nf.filename,utils.timestamp.getTimestamp()) ##WARNING: problems for timestamp
+        fmap.checkIn()
+        fd.getInstance(frominode,self.io).commitPatch(fmap)
+
+
+    def formatfs(self):
+        # format the container. Attentez! No deletion is garanteed!
+        nf=fd.getInstance(root_iNode_name,self.io)
+        fmap=kvmap(None)
+        fmap.checkOut()
+        fmap.kvm[u"."]=(root_iNode_name,utils.timestamp.getTimestamp())
+        fmap.kvm[u".."]=(root_iNode_name,utils.timestamp.getTimestamp())
+        fmap.checkIn()
+        nf.commitPatch(fmap)
+
+    def list(self,frominode):
+        inodefile=fd.getInstance(frominode,self.io).getFile()
+        if inodefile==None:
+            raise ex.exception_folder.iNodeNonexistException(u"invalid inode @ listAll")
+        inodefile.checkOut()
+        ret=[]
+        for f in inodefile.kvm:
+            if u"/" not in f:
+                ret.append(f)
+        return f
+
+if __name__ == '__main__':
+    from kernel.distributedvc.demonoupload import demoio
+    fs(demoio).formatfs()

@@ -5,7 +5,7 @@ from kernel.distributedvc.filehandler import fd
 import ex.exception_folder
 
 def checkValidFilename(filename):
-    invalidChar="/"     #This char also act as a key to indicate that this key-value is an attribute, not a file
+    invalidChar=u"/"     #This char also act as a key to indicate that this key-value is an attribute, not a file
     for i in invalidChar:
         if i in filename:
             return False
@@ -23,4 +23,4 @@ def lookUp(inode,vfilename,io):
     inodefile.checkOut()
     if vfilename not in inodefile.kvm:
         return None
-    return inodefile.kvm[vfilename]
+    return inodefile.kvm[vfilename][0]
