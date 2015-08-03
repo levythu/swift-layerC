@@ -33,7 +33,7 @@ class fs:
         # not checking existence of the created folder! May overflow depending on the
         # conflict resolving strategy
         nf=fd.getInstance(genGlobalUniqueName(),self.io)
-        
+
         fmap=kvmap(None)
         fmap.checkOut()
         fmap.kvm[u"."]=(nf.filename,utils.timestamp.getTimestamp())
@@ -67,8 +67,10 @@ class fs:
         for f in inodefile.kvm:
             if u"/" not in f:
                 ret.append(f)
-        return f
+        return ret
 
 if __name__ == '__main__':
     from kernel.distributedvc.demonoupload import demoio
-    fs(demoio).formatfs()
+    f=fs(demoio)
+    print f.list(root_iNode_name)
+    #f.mkdir(u"filex.txt",root_iNode_name)

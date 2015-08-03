@@ -5,7 +5,6 @@ from utils.functionhelper import *
 import config.nodeinfo
 from kernel.filetype.kvmap import kvmap
 from kernel.filetype import filemap
-from demonoupload import *
 import cStringIO
 import intranodevc
 import internodevc
@@ -79,7 +78,10 @@ class fd(syncClassBase):
         t.close()
         self.latestPatch+=1
         self.intravisor.announceNewTask(self.latestPatch)
-        self.intravisor.batchWorker()
+        if self.latestPatch>0:
+            self.intravisor.batchWorker()
+        else:
+            self.intervisor.propagateUpModification()
         #print meta
 
     @sync_(1)
@@ -124,9 +126,11 @@ class fd(syncClassBase):
             print u"Delete patch:",self.getPatchName(prg)
             prg=nprg
             prgto=self.io.getinfo(self.getPatchName(prg))
+        self.io.delete(self.getCanonicalVersionName())
 
 
 if __name__ == '__main__':
+    from demonoupload import *
     #    t=kvmap(None)
     #    t.checkOut()
     #    t.kvm[u"huha"]=(u"baomihua",2)
@@ -141,5 +145,5 @@ if __name__ == '__main__':
 
     #    q=fd.getInstance(u"test1",demoio)
     #    q.commitPatch(t)
-
-    print fd.getInstance(u"test1",demoio).getFile().loadIntoMem().writeBack().getvalue()
+    #fd.getInstance(u"rootNode",demoio)._removeAllPatch()
+    #print fd.getInstance(u"test1",demoio).getFile().loadIntoMem().writeBack().getvalue()

@@ -127,6 +127,8 @@ class kvmap(filetype):
         return self.readData[pos]
 
     def writeBack(self,filename=None):
+        if self.type!="file":
+            self.loadIntoMem()
         if not self.finishRead:
             return
         if self.type=="file":
