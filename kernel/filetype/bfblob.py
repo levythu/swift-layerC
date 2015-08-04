@@ -1,6 +1,7 @@
 # coding=utf-8
 
 from ftype import filetype
+import random
 import utils.timestamp
 import ex.exception_file
 
@@ -25,7 +26,12 @@ class bfblob(filetype):
             self.type=file2.type
             return
         if self.file0[1]==file2.file0[1]:
-            raise ex.exception_file.MergeConflictException("Conflict @ bfblob.")
+            if random.random()<0.5:
+                self.modified=True
+                self.file0=file2.file0
+                self.type=file2.type
+                return
+            #raise ex.exception_file.MergeConflictException("Conflict @ bfblob.")
 
     def writeBack(self):
         if self.type=="stream":

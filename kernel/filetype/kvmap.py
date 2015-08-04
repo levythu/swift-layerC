@@ -5,6 +5,7 @@ import struct
 from ftype import filetype
 import utils.timestamp
 import ex.exception_file
+import random
 import cStringIO
 
 class kvmap(filetype):
@@ -67,6 +68,7 @@ class kvmap(filetype):
         self.kvm=None
 
     def mergeWith(self,file2):
+        filetype.mergeWith(self,file2)
         tmpList=[]
         i=0
         j=0
@@ -95,7 +97,11 @@ class kvmap(filetype):
                 # Attentez: merge stratege may be changed in the future
                 if self.lazyRead(i)[1][1]==file2.lazyRead(j)[1][1]:
                     if self.lazyRead(i)[1][0]!=file2.lazyRead(j)[1][0]:
-                        raise ex.exception_file.MergeConflictException("Conflict @ kvmap.")
+                        #raise ex.exception_file.MergeConflictException("Conflict @ kvmap.")
+                        if random.random()<0.5:
+                            tTuple=self.lazyRead(i)
+                        else:
+                            tTuple=file2.lazyRead(j)
                     else:
                         tTuple=self.lazyRead(i)
                 else:
