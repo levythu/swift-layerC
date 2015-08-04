@@ -21,8 +21,8 @@ class session(syncClassBase):
     def mkdir(self,foldername):
         self.fs.mkdir(foldername,self.d)
 
-    def rmdir(self,foldername):
-        self.fs.rmdir(foldername,self.d)
+    def rm(self,foldername):
+        self.fs.rm(foldername,self.d)
 
 
 from kernel.distributedvc.demonoupload import demoio

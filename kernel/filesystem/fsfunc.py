@@ -75,7 +75,7 @@ class fs:
                 ret.append(f)
         return ret
 
-    def rmdir(self,foldername,frominode):
+    def rm(self,foldername,frominode):
         # Attentez: this remove will remove the whole folder, no matter whether there's
         # anything in it.
         if not primitiveFunc.checkValidFilename(foldername):
