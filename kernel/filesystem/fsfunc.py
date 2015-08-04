@@ -30,8 +30,15 @@ class fs:
         return frominode
 
     def mkdir(self,foldername,frominode):
-        # not checking existence of the created folder! May overflow depending on the
-        # conflict resolving strategy
+        if not primitiveFunc.checkValidFilename(foldername):
+            raise ex.exception_folder.invalidFilenameException(u"invalid filename @ mkdir")
+
+        par=fd.getInstance(frominode,self.io)
+        flist=par.getFile()
+        flist.checkOut()
+        if foldername in flist.kvm:
+            raise ex.exception_folder.fileOperationException(u"folder already exist @ mkdir")
+
         nf=fd.getInstance(genGlobalUniqueName(),self.io)
 
         fmap=kvmap(None)
@@ -43,10 +50,9 @@ class fs:
 
         fmap=kvmap(None)
         fmap.checkOut()
-        fmap.kvm[foldername]=(nf.filename,utils.timestamp.getTimestamp()) ##WARNING: problems for timestamp
+        fmap.kvm[foldername]=(nf.filename,utils.timestamp.getTimestamp())
         fmap.checkIn()
-        fd.getInstance(frominode,self.io).commitPatch(fmap)
-
+        par.commitPatch(fmap)
 
     def formatfs(self):
         # format the container. Attentez! No deletion is garanteed!
@@ -68,6 +74,24 @@ class fs:
             if u"/" not in f:
                 ret.append(f)
         return ret
+
+    def rmdir(self,foldername,frominode):
+        # Attentez: this remove will remove the whole folder, no matter whether there's
+        # anything in it.
+        if not primitiveFunc.checkValidFilename(foldername):
+            raise ex.exception_folder.invalidFilenameException(u"invalid filename @ mkdir")
+
+        par=fd.getInstance(frominode,self.io)
+        flist=par.getFile()
+        flist.checkOut()
+        if foldername not in flist.kvm:
+            return
+
+        fmap=kvmap(None)
+        fmap.checkOut()
+        fmap.kvm[foldername]=(kvmap.REMOVE_SPECIFIED,utils.timestamp.getTimestamp(flist.kvm[foldername][1]))
+        fmap.checkIn()
+        par.commitPatch(fmap)
 
 if __name__ == '__main__':
     from kernel.distributedvc.demonoupload import demoio

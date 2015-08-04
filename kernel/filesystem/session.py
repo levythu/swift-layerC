@@ -7,7 +7,7 @@ from utils.decorator.synchronizer import syncClassBase,sync,sync_
 class session(syncClassBase):
     '''A wrapper for fsfunc that record working directory'''
     def __init__(self,io):
-        syncClassBase.__init__()
+        syncClassBase.__init__(self)
         self.fs=fs(io)
         self.d=root_iNode_name
 
@@ -15,6 +15,15 @@ class session(syncClassBase):
     def cd(self,path):
         self.d=self.fs.locate(path,self.d)
 
-    @sync
     def ls(self):
         return self.fs.list(self.d)
+
+    def mkdir(self,foldername):
+        self.fs.mkdir(foldername,self.d)
+
+    def rmdir(self,foldername):
+        self.fs.rmdir(foldername,self.d)
+
+
+from kernel.distributedvc.demonoupload import demoio
+this=session(demoio)

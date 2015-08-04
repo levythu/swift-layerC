@@ -23,3 +23,9 @@ class invalidFilenameException(Exception):
     def __init__(self, msg):
         Exception.__init__(self)
         self.msg=msg
+
+class fileOperationException(Exception):
+    '''Thrown when one lookup have no target.'''
+    def __init__(self, msg):
+        Exception.__init__(self)
+        self.msg=msg

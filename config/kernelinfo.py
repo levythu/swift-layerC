@@ -12,3 +12,7 @@ auto_commit_per_intramerge=5
 # Save time but a waste of resource when handling great concurrency.
 enable_parallel_overhaul=False
 '''=============================================='''
+
+'''=============Pseudo-fs settings==============='''
+
+'''=============================================='''

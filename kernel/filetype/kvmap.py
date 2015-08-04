@@ -37,6 +37,12 @@ class kvmap(filetype):
     fileMagic="KVMP"
     glbEncode="utf-8"
 
+    # This is a special value indicating that the key is about to get removed.
+    # When checkout, ignore k-v with the value of it and when checkIn, perform as
+    # it is.
+    # When merging, artificially remove the key from dictionary.
+    REMOVE_SPECIFIED=u"$@REMOVED@$)*!*"
+
     _Type=u"key-value map file"
     @classmethod
     def getType(cls):
@@ -168,7 +174,8 @@ class kvmap(filetype):
             self.lazyRead()
         self.kvm={}
         for i in xrange(0,self.haveRead):
-            self.kvm[self.readData[i][0]]=self.readData[i][1]
+            if self.readData[i][1][0]!=kvmap.REMOVE_SPECIFIED:
+                self.kvm[self.readData[i][0]]=self.readData[i][1]
 
     def checkIn(self):
         if self.kvm==None:
