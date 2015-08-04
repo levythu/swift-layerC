@@ -130,7 +130,7 @@ class kvmap(filetype):
                 self.finishRead=True
                 return None
             m=struct.unpack("<L", self.f.read(4))[0]
-            ts=struct.unpack("<L", self.f.read(4))[0]
+            ts=struct.unpack("<Q", self.f.read(8))[0]
             key=self.f.read(n).decode(kvmap.glbEncode)
             val=(self.f.read(m).decode(kvmap.glbEncode),ts)
             self.readData.append((key,val));
@@ -156,7 +156,7 @@ class kvmap(filetype):
                 continue
             f.write(struct.pack("<L", len(keybuf)))
             f.write(struct.pack("<L", len(valbuf)))
-            f.write(struct.pack("<L", self.readData[i][1][1]))
+            f.write(struct.pack("<Q", self.readData[i][1][1]))
             f.write(keybuf)
             f.write(valbuf)
         f.write(struct.pack("<L", 0))

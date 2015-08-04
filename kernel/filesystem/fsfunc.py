@@ -96,5 +96,5 @@ class fs:
 if __name__ == '__main__':
     from kernel.distributedvc.demonoupload import demoio
     f=fs(demoio)
-    print f.list(root_iNode_name)
+    f.formatfs()
     #f.mkdir(u"filex.txt",root_iNode_name)

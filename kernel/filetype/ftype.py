@@ -6,7 +6,7 @@ class filetype:
     """general type for all the specified ones, regulating interfaces."""
 
     def __init__(self,file0):
-        self.file0=file0
+        self.file0=(file0[0],int(file0[1]))
         if isinstance(file0[0],str):
             self.type="file"
         else:
