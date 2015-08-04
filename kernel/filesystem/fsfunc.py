@@ -19,10 +19,10 @@ class fs:
         if path.startswith(u"/"):
             frominode=root_iNode_name
         if frominode==None:
-            raise ex.exception_folder.noSearchStartException("No start @ locate")
+            raise ex.exception_folder.noSearchStartException(u"No start @ locate")
         hierarchy=filter(lambda x:x!=u"",path.split(u"/"))
         if len(hierarchy)==0:
-            raise ex.exception_folder.noSearchTergetException("No target @ locate")
+            raise ex.exception_folder.noSearchTergetException(u"No target @ locate")
         for i in hierarchy:
             frominode=primitiveFunc.lookUp(frominode,i,self.io)
             if frominode==None:
