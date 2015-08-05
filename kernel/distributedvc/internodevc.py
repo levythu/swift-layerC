@@ -42,12 +42,12 @@ class intermergeworker(Thread):
             filename=self.fd.getPatchName(0,utils.datastructure.splittree.fromLeaftoNode(nodeid))
         else:
             filename=self.fd.getGlobalPatchName(nodeid)
-        tm=int(round(time.time()*1000))
         tf=self.fd.io.get(filename)
         if tf==None:
             return None
         ppMeta,ppCont=tf
         ppFile=filemap[ppMeta[filehandler.fd.METAKEY_TYPE]]((cStringIO.StringIO(ppCont),int(ppMeta[filehandler.fd.METAKEY_TIMESTAMP])))
+        tm=int(ppMeta[filehandler.fd.METAKEY_TIMESTAMP])
         return (ppFile,tm)
 
     def gleanInfo(self,nodeid,cachedict={}):
@@ -95,7 +95,7 @@ class intermergeworker(Thread):
             rtime=ltime
         else:
             lfile.mergeWith(rfile)
-        ut=int(round(time.time()*1000))
+        ut=int(lfile.getTimestamp())
         return (lfile,ut,(ltime,rtime))
 
     def makeCanonicalFile(self,cache={}):
