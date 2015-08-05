@@ -19,6 +19,7 @@ parent(i)   =(i^layer(i))|(layer(i)<<1)=(i^(i&-i))|((i&-i)<<1)
 By Levy
 '''
 def fromNodeToLeaf(n):
+    # Leaf is the number in the tree, node is numbered from 0
     return (n<<1)+1
 
 def isLeaf(n):
@@ -43,3 +44,27 @@ def getRootLable(leafnum):
         res=leafnum
         leafnum^=leafnum&-leafnum
     return res
+
+def traverse(leafnum,callback):
+    rt=getRootLable(leafnum)
+    limit=fromNodeToLeaf(leafnum-1) #numbered from 0~leafnum-1
+
+    lay=1
+    layer=1<<(lay-1)
+    while True:
+        i=0
+        nodeid=(i<<lay)|layer
+        while nodeid<=limit:
+            callback(nodeid,lay)
+            i+=1
+            nodeid=(i<<lay)|layer
+        if limit==rt:
+            break
+        lay+=1
+        layer=1<<(lay-1)
+        limit=parent(limit)
+
+if __name__ == '__main__':
+    def x(node,lay):
+        print node,lay
+    traverse(5,x)
