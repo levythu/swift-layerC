@@ -4,4 +4,4 @@
 node_number=0
 
 # the total number of proxy nodes in the cluster
-node_nums_in_all=1
+node_nums_in_all=3
