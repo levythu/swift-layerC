@@ -6,7 +6,6 @@ import ex.exception_logic
 import utils.datastructure.splittree
 import filehandler
 import config.nodeinfo
-import time
 import cStringIO
 
 overhaulOrder=[]

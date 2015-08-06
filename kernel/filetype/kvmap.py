@@ -16,6 +16,7 @@ class kvmap(filetype):
         - BYTE0~3: magic chars "KVMP"
         =========Rep=========
         - 4B-int: n, 4B-int:m
+        - 8B-int: timestamp
         - n B: unicoded key
         - m B: unicoded value
         =====================
