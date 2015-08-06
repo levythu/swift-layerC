@@ -75,23 +75,19 @@ class kvmap(filetype):
         while True:
             if self.lazyRead(i)==None:
                 while file2.lazyRead(j)!=None:
-                    if file2.lazyRead(j)[1][0]!=kvmap.REMOVE_SPECIFIED:
-                        tmpList.append(file2.lazyRead(j))
+                    tmpList.append(file2.lazyRead(j))
                     j+=1
                 break
             if file2.lazyRead(j)==None:
                 while self.lazyRead(i)!=None:
-                    if self.lazyRead(i)[1][0]!=kvmap.REMOVE_SPECIFIED:
-                        tmpList.append(self.lazyRead(i))
+                    tmpList.append(self.lazyRead(i))
                     i+=1
                 break
             while self.lazyRead(i)!=None and file2.lazyRead(j)!=None and self.lazyRead(i)[0]<file2.lazyRead(j)[0]:
-                if self.lazyRead(i)[1][0]!=kvmap.REMOVE_SPECIFIED:
-                    tmpList.append(self.lazyRead(i))
+                tmpList.append(self.lazyRead(i))
                 i+=1
             while self.lazyRead(i)!=None and file2.lazyRead(j)!=None and self.lazyRead(i)[0]>file2.lazyRead(j)[0]:
-                if file2.lazyRead(j)[1][0]!=kvmap.REMOVE_SPECIFIED:
-                    tmpList.append(file2.lazyRead(j))
+                tmpList.append(file2.lazyRead(j))
                 j+=1
             while self.lazyRead(i)!=None and file2.lazyRead(j)!=None and self.lazyRead(i)[0]==file2.lazyRead(j)[0]:
                 # Attentez: merge stratege may be changed in the future
@@ -106,8 +102,7 @@ class kvmap(filetype):
                         tTuple=self.lazyRead(i)
                 else:
                     tTuple=self.lazyRead(i) if self.lazyRead(i)[1][1]>file2.lazyRead(j)[1][1] else file2.lazyRead(j)
-                if tTuple[1][0]!=kvmap.REMOVE_SPECIFIED:
-                    tmpList.append(tTuple)
+                tmpList.append(tTuple)
                 i+=1
                 j+=1
         self.readData=tmpList
