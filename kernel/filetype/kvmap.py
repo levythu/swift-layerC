@@ -180,15 +180,21 @@ class kvmap(filetype):
         while not self.finishRead:
             self.lazyRead()
         self.kvm={}
+        self.rmed={}
         for i in xrange(0,self.haveRead):
             if self.readData[i][1][0]!=kvmap.REMOVE_SPECIFIED:
                 self.kvm[self.readData[i][0]]=self.readData[i][1]
+            else:
+                self.rmed[self.readData[i][0]]=self.readData[i][1]
 
     def checkIn(self):
         if self.kvm==None:
             print "!! Logical Error at kvmap::checkIn."
             return
         tmpList=[]
+        for i in self.rmed:
+            if (i not in self.kvm) or (self.kvm[i][1]<self.rmed[i][1]):
+                self.kvm[i]=self.rmed[i]
         it = iter(sorted(self.kvm.iteritems()))
         while True:
             t=next(it, None)
@@ -197,6 +203,21 @@ class kvmap(filetype):
             tmpList.append(t)
         self.readData=tmpList
         self.haveRead=len(self.readData)
+
+    def getRelativeTS(self, key):
+        # Must invoked after checkOut()
+        if self.kvm==None:
+            print "!! Logical Error at kvmap::checkIn."
+            return
+        if key in self.kvm:
+            print "hohoho!"
+            print utils.timestamp.getTimestamp(self.kvm[key][1])
+            return utils.timestamp.getTimestamp(self.kvm[key][1])
+        if key in self.rmed:
+            print "hahaha!"
+            print utils.timestamp.getTimestamp(self.rmed[key][1])
+            return utils.timestamp.getTimestamp(self.rmed[key][1])
+        return utils.timestamp.getTimestamp()
 
 if __name__ == '__main__':
     t=kvmap(("h.expdata",2))

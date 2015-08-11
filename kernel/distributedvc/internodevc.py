@@ -129,9 +129,6 @@ class intermergeworker(Thread):
             buf=oFile.writeBack()
             self.fd.io.put(self.fd.getCanonicalVersionName(),buf.getvalue(),tarMeta)
             buf.close()
-        else:
-            print tarMeta
-            print rpTime
 
     def run(self):
         if self.isbubble:
@@ -163,11 +160,11 @@ class intermergeworker(Thread):
                             strm.close()
                         elif int(pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1])>=ltime and int(pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2])>=rtime:
                             # The local version is outdated. Abort propagating
-                            print nw,int(pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]),ltime,int(pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]),rtime
+                            # print nw,int(pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]),ltime,int(pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]),rtime
                             return
                         else:
                             # The two version cannot cover each other, a reglean is needed.
-                            print nw,int(pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]),ltime,int(pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]),rtime
+                            # print nw,int(pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME1]),ltime,int(pmeta[filehandler.fd.INTER_PATCH_METAKEY_SYNCTIME2]),rtime
                             notMove=True
                     cacher={}
                     if not notMove:

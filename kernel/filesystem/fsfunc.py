@@ -49,9 +49,9 @@ class fs:
         nf.commitPatch(fmap)
 
         fmap=kvmap(None)
-        fmap.setTimestamp(flist.getTimestamp())
+        fmap.setTimestamp(utils.timestamp.getTimestamp(flist.getTimestamp()))
         fmap.checkOut()
-        fmap.kvm[foldername]=(nf.filename,utils.timestamp.getTimestamp())
+        fmap.kvm[foldername]=(nf.filename,flist.getRelativeTS(foldername))
         fmap.checkIn()
         par.commitPatch(fmap)
 
@@ -89,8 +89,9 @@ class fs:
             return
 
         fmap=kvmap(None)
+        fmap.setTimestamp(utils.timestamp.getTimestamp(flist.getTimestamp()))
         fmap.checkOut()
-        fmap.kvm[foldername]=(kvmap.REMOVE_SPECIFIED,utils.timestamp.getTimestamp(flist.kvm[foldername][1]))
+        fmap.kvm[foldername]=(kvmap.REMOVE_SPECIFIED,flist.getRelativeTS(foldername))
         fmap.checkIn()
         par.commitPatch(fmap)
 
