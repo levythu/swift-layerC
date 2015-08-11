@@ -49,6 +49,7 @@ class fs:
         nf.commitPatch(fmap)
 
         fmap=kvmap(None)
+        fmap.setTimestamp(flist.getTimestamp())
         fmap.checkOut()
         fmap.kvm[foldername]=(nf.filename,utils.timestamp.getTimestamp())
         fmap.checkIn()

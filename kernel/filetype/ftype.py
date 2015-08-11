@@ -22,5 +22,8 @@ class filetype:
     def getTimestamp(self):
         return self.file0[1]
 
+    def setTimestamp(self, ts):
+        self.file0=(self.file0[0],ts)
+
 if __name__ == '__main__':
     pass

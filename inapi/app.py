@@ -12,6 +12,8 @@ def handleput():
     c=request.data
     print len(c)
     print request.headers
+    for i in request.form:
+        print i,": ",request.form[i]
     return "hahaha"
 
 if __name__ == "__main__":
